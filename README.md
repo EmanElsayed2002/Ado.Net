@@ -86,25 +86,198 @@ class Program
 {
     static void Main()
     {
-           string connectionString = "Server=.;Database=YourDatabase;Trusted_Connection=True;TrustServerCertificate=True;";
-           SqlConnection connection = new SqlConnection(connectionString);
+        // هنا بنكتب بيانات الاتصال بقاعدة البيانات
+        string connectionString = "Server=.;Database=YourDatabase;Trusted_Connection=True;TrustServerCertificate=True;";
+        
+        // ده الكائن اللي هيعمل الاتصال بقاعدة البيانات
+        SqlConnection connection = new SqlConnection(connectionString);
+
+        try
+        {
+            // هنفتح الاتصال بقاعدة البيانات
+            connection.Open();
+            
+            // هنطبع اسم قاعدة البيانات اللي متصلين بيها
+            Console.WriteLine($"Database: {connection.Database}");
+            
+            // هنطبع اسم السيرفر اللي متصلين عليه
+            Console.WriteLine($"Server: {connection.DataSource}");
+            
+            // هنطبع الوقت المسموح بيه للاتصال قبل ما يفصل (بالثواني)
+            Console.WriteLine($"Connection Timeout: {connection.ConnectionTimeout}");
+            
+            // هنطبع حالة الاتصال دلوقتي (هل هو مفتوح ولا مقفول)
+            Console.WriteLine($"State: {connection.State}");
+            
+            // هنقفل الاتصال بقاعدة البيانات
+            connection.Close();
+            
+            // هنطبع حالة الاتصال بعد ما قفلناه
+            Console.WriteLine($"State after Close: {connection.State}");
+        }
+        catch (Exception ex)
+        {
+            // لو حصل خطأ، هنعرض رسالة الخطأ
+            Console.WriteLine($"An error occurred: {ex.Message}");
+        }
+    }
+}
+
+```
+## 2. SqlCommand
+```csharp
+using System;
+using System.Data.SqlClient;
+
+class Program
+{
+    static void Main()
+    {
+        // بيانات الاتصال بقاعدة البيانات
+        string connectionString = "Server=.;Database=YourDatabase;Trusted_Connection=True;TrustServerCertificate=True;";
+
+        // استعلام الإضافة
+        string insertQuery = "INSERT INTO Users (Name, Age) VALUES (@Name, @Age)";
+
+        // تجهيز كائن الاتصال
+        SqlConnection connection = new SqlConnection(connectionString);
+
+        // تجهيز كائن الأمر وربطه بالاتصال
+        SqlCommand command = new SqlCommand(insertQuery, connection);
+
+        // إضافة القيم للباراميترز
+        command.Parameters.AddWithValue("@Name", "Eman Elsayed");
+        command.Parameters.AddWithValue("@Age", 22);
+
+        try
+        {
+            // فتح الاتصال بقاعدة البيانات
+            connection.Open();
+
+            // تنفيذ استعلام الإضافة
+            int rowsAffected = command.ExecuteNonQuery();
+
+            // طباعة عدد الصفوف اللي تم إضافتها
+            Console.WriteLine($"{rowsAffected} صفوف تم إضافتها بنجاح.");
+        }
+        catch (Exception ex)
+        {
+            // لو حصل خطأ، نعرض رسالة الخطأ
+            Console.WriteLine($"خطأ أثناء إضافة البيانات: {ex.Message}");
+        }
+        finally
+        { // التأكد من إغلاق الاتصال بقاعدة البيانات
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+                Console.WriteLine("تم إغلاق الاتصال بقاعدة البيانات.");
+            }
+        }
+    }
+}
+```
+## 3. DataReader
+```csharp
+using System;
+using System.Data.SqlClient;
+
+class Program
+{
+    static void Main()
+    {
+        // بيانات الاتصال بقاعدة البيانات
+        string connectionString = "Server=.;Database=YourDatabase;Trusted_Connection=True;TrustServerCertificate=True;";
+
+        // الاستعلام اللي هنستخدمه لجلب البيانات
+        string query = "SELECT Id, Name, Age FROM Users";
+
+        // تجهيز كائن الاتصال
+        SqlConnection connection = new SqlConnection(connectionString);
+
+        // تجهيز كائن الأمر (Command)
+        SqlCommand command = new SqlCommand(query, connection);
+
+        try
+        {
+            // فتح الاتصال بقاعدة البيانات
+            connection.Open();
+
+            // تنفيذ الاستعلام وجلب البيانات باستخدام SqlDataReader
+            SqlDataReader reader = command.ExecuteReader();
+
+            // قراءة البيانات من SqlDataReader وعرضها
+            while (reader.Read())
+            {
+                // طباعة كل صف من البيانات
+                Console.WriteLine($"ID: {reader["Id"]}, Name: {reader["Name"]}, Age: {reader["Age"]}");
+            }
+
+            // التأكد من إغلاق الـ SqlDataReader بعد الاستخدام
+            reader.Close();
+        }
+        catch (Exception ex)
+        {
+            // لو حصل خطأ هنطبع رسالة الخطأ
+            Console.WriteLine($"خطأ أثناء قراءة البيانات: {ex.Message}");
+        }
+        finally
+        {
+            // التأكد من إغلاق الاتصال بقاعدة البيانات
+            if (connection.State == System.Data.ConnectionState.Open)
+            {
+                connection.Close();
+                Console.WriteLine("تم إغلاق الاتصال بقاعدة البيانات.");
+            }
+        }
+    }
+}
+```
+## 4. DataAdapter
+```csharp
+using System;
+using System.Data;
+using System.Data.SqlClient;
+
+class Program
+{
+    static void Main()
+    {
+        // بيانات الاتصال بقاعدة البيانات
+        string connectionString = "Server=.;Database=YourDatabase;Trusted_Connection=True;TrustServerCertificate=True;";
+        
+        // الاستعلام اللي هيجيب البيانات من جدول Users
+        string query = "SELECT Id, Name, Age FROM Users";
+        
+        // تجهيز كائن DataTable علشان نخزن فيه البيانات المسترجعة
+        DataTable datatable = new DataTable();
+        
+        // فتح الاتصال بقاعدة البيانات
+        using (SqlConnection connection = new SqlConnection(connectionString))
+        {
+            // تجهيز SqlDataAdapter اللي هيجيب البيانات من الاستعلام ويروح يحطها في الـ DataTable
+            SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
+
             try
             {
-                connection.Open();
-                Console.WriteLine($"Database: {connection.Database}");
-                Console.WriteLine($"Server: {connection.DataSource}");
-                Console.WriteLine($"Connection Timeout: {connection.ConnectionTimeout}");
-                Console.WriteLine($"State: {connection.State}");
-                connection.Close();
-                Console.WriteLine($"State after Close: {connection.State}");
+                // ملء الـ DataTable بالبيانات من قاعدة البيانات
+                adapter.Fill(datatable);
+
+                // نقرأ البيانات من الـ DataTable ونعرضها
+                foreach (DataRow row in datatable.Rows)
+                {
+                    // طباعة البيانات لكل صف
+                    Console.WriteLine($"ID: {row["Id"]}, Name: {row["Name"]}, Age: {row["Age"]}");
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred: {ex.Message}");
+                // لو حصل خطأ في جلب البيانات، هنطبع رسالة الخطأ
+                Console.WriteLine($"خطأ أثناء جلب البيانات: {ex.Message}");
             }
+        }
     }
 }
-   
+```
 
 
 
