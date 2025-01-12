@@ -22,3 +22,90 @@
 
 
 
+### متى نستخدم Connected Mode؟
+- لما تكون البيانات اللي محتاجها بتتغير بسرعة وعايز أحدث نسخة.
+- لما تكون البيانات بسيطة ومش محتاج تعدل عليها كتير.
+#### الأمثلة:
+- تطبيق عرض أسعار الأسهم اللي بيحتاج تحديث مستمر وفوري للبيانات.
+- تنفيذ عمليات سريعة على قاعدة البيانات بدون تخزين مؤقت.
+- لوحة تحكم بتعرض بيانات في الوقت الحقيقي مثل بيانات مستشعرات (Sensors).
+ - ***الobject المستخدم SqlDataReader.***
+
+### متى نستخدم Disconnected Mode؟
+- لما تكون شغال على تطبيق فيه عدد كبير من المستخدمين وما ينفعش كلهم يبقوا متصلين بقاعدة البيانات طول الوقت.
+- لما تكون عايز تعمل تعديلات على البيانات بعيد عن قاعدة البيانات ثم ترجعها بعد كدا.
+- تطبيق لإدارة الحجوزات في فندق، حيث بيتم تحميل بيانات العملاء والعمل عليها بدون الحاجة لاتصال دائم بقاعدة البيانات.
+#### الأمثلة:
+- تطبيقات إدارة المبيعات اللي بتحمل بيانات العملاء مرة واحدة وتعدل عليها بدون اتصال مستمر.
+- تقارير Excel اللي بتعتمد على بيانات قاعدة البيانات ولكن بتشتغل عليها بشكل منفصل.
+- ***الobject المستخدم SqlDataAdapter.***
+### اي هو ADO.Net
+هي مجموعة من الـ classes اللي بتسهل التعامل مع قواعد البيانات في برامجك اللي بتستخدم .NET. يعني لو عايز تتعامل مع قاعدة بيانات (سواء كان SQL Server أو أي نوع تاني من قواعد البيانات)، ممكن تستخدم الأدوات دي عشان تسهل عليك إزاي تضيف وتعدل وتسترجع بيانات.
+
+في الـ ADO.NET، في كلاس رئيسي زي SqlConnection عشان تتصل بقاعدة البيانات، وSqlCommand عشان تنفذ الاستعلامات، وSqlDataReader عشان تقرأ البيانات اللي جايه من الاستعلام. فالفكرة كلها إنك مش مضطر تتعامل مع التفاصيل الكثيرة بنفسك، الـ ADO.NET بيسهل عليك الموضوع ده.
+
+
+
+# مكونات ADO.NET بالتفصيل
+
+## 1. SqlConnection
+ده الكائن اللي بيسمح بفتح اتصال مع قاعدة البيانات. لازم تحدد بيانات الاتصال زي:
+- اسم الخادم (Server Name).
+- اسم قاعدة البيانات.
+
+## 2. SqlCommand
+ده الكائن اللي بنستخدمه لتنفيذ الأوامر على قاعدة البيانات زي:
+- SELECT
+- INSERT
+- UPDATE
+- DELETE
+
+بيربط مع SqlConnection عشان يعرف أي قاعدة بيانات يتعامل معها.
+
+## 3. SqlDataReader
+ده بيشتغل في وضع Connected Mode. بيجيب البيانات في شكل (Stream) للقراءة فقط، وده بيخلي الأداء سريع جدًا.
+
+## 4. DataSet
+ده عبارة عن "نسخة مؤقتة" من البيانات بتتخزن في الذاكرة. يحتوي على:
+- جداول (DataTables)
+- وصفوف (Rows)
+- أعمدة (Columns)
+كأنه قاعدة بيانات صغيرة. بيدعم الوضع Disconnected Mode، وده بيخليك تعدل على البيانات بدون الحاجة للاتصال المستمر بقاعدة البيانات.
+
+## 5. SqlDataAdapter
+ده بيعمل دور الوسيط بين DataSet وقاعدة البيانات. بيملأ DataSet بالبيانات ويكتب التعديلات مرة تانية في قاعدة البيانات. بيستخدم كائنات SqlCommand لتنفيذ العمليات.
+
+# أكواد ADO.NET
+
+## 1. SqlConnection
+```csharp
+using System;
+using System.Data.SqlClient;
+
+class Program
+{
+    static void Main()
+    {
+           string connectionString = "Server=.;Database=YourDatabase;Trusted_Connection=True;TrustServerCertificate=True;";
+           SqlConnection connection = new SqlConnection(connectionString);
+            try
+            {
+                connection.Open();
+                Console.WriteLine($"Database: {connection.Database}");
+                Console.WriteLine($"Server: {connection.DataSource}");
+                Console.WriteLine($"Connection Timeout: {connection.ConnectionTimeout}");
+                Console.WriteLine($"State: {connection.State}");
+                connection.Close();
+                Console.WriteLine($"State after Close: {connection.State}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+    }
+}
+   
+
+
+
+
